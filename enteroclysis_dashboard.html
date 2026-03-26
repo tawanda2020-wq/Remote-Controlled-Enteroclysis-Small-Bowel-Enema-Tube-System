@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enteroclysis Tube Control System — Dashboard</title>
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <!-- Google Fonts: Syne (headers) + IBM Plex Mono (readouts) + DM Sans (body) -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DESIGN TOKENS — mirrors the guide's hot-pink / charcoal palette
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      /* Core palette (taken from the guide's header colour) */
+      --pink:          #d4006e;   /* Primary magenta-pink accent */
+      --pink-bright:   #f0009e;   /* Hover / glow state */
+      --pink-dim:      #8c0049;   /* Subdued / border state */
+      --pink-glow:     rgba(212, 0, 110, 0.18);
+      --pink-glow-lg:  rgba(212, 0, 110, 0.10);
+
+      /* Secondary accents */
+      --cyan:          #00c8d7;   /* Advance / active colour */
+      --amber:         #f59e0b;   /* Retract / warning colour */
+      --red:           #ef4444;   /* Stop / error colour */
+      --green:         #22c55e;   /* OK / ready colour */
+      --violet:        #7c3aed;   /* Misc highlight */
+
+      /* Backgrounds */
+      --bg-root:     #dee2ec;   /* Page background */
+      --bg-card:       #111827;   /* Card surface */
+      --bg-inset:      #161e30;   /* Input / inset surface */
+      --bg-elevated:   #1a2540;   /* Elevated element */
+
+      /* Borders */
+      --border:        #1e2d47;
+      --border-accent: #2f1e36;
+
+      /* Text */
+      --text-primary:  #e8edf5;
+      --text-secondary:#8fa3c0;
+      --text-muted:    #4b5e7e;
+      --text-mono:     #a8d8d0;
+
+      /* Typography */
+      --font-display:  'Syne', sans-serif;
+      --font-body:     'DM Sans', sans-serif;
+      --font-mono:     'IBM Plex Mono', monospace;
+
+      /* Radii */
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 16px;
+      --r-xl: 22px;
+
+      --transition: 0.18s ease;
+    }
+
+    /* ── Reset & base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg-root);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      /* Subtle dot-grid texture */
+      background-image: radial-gradient(rgba(212,0,110,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       DEMO NOTICE BANNER
+       ══════════════════════════════════════════════════════════════ */
+    .demo-banner {
+      background: linear-gradient(90deg, #1a0d22, #1e0b2e, #1a0d22);
+      border-bottom: 1px solid var(--pink-dim);
+      padding: 8px 20px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: #c084fc;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .demo-banner .badge-demo {
+      background: var(--pink);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       TOP NAVIGATION / HEADER
+       ══════════════════════════════════════════════════════════════ */
+    .top-nav {
+      background: #0d1221;
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .nav-logo {
+      width: 36px; height: 36px;
+      background: var(--pink);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 18px var(--pink-glow);
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-logo::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+    }
+    .nav-brand-text {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.3px;
+    }
+    .nav-brand-sub {
+      font-size: 10px;
+      color: var(--text-mono);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: -2px;
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-tab {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-mono);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all var(--transition);
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+    .nav-tab:hover   { color: var(--text-primary); background: var(--bg-inset); }
+    .nav-tab.active  { color: var(--pink-bright); background: var(--pink-glow); border-color: var(--pink-dim); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Connection status pill */
+    .conn-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .conn-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0 rgba(34,197,94,0.7);
+      animation: pulse-green 2s infinite;
+    }
+    .conn-dot.offline { background: var(--red); box-shadow: none; animation: none; }
+    @keyframes pulse-green {
+      0%   { box-shadow: 0 0 0 0   rgba(34,197,94,0.7); }
+      70%  { box-shadow: 0 0 0 6px rgba(34,197,94,0);   }
+      100% { box-shadow: 0 0 0 0   rgba(34,197,94,0);   }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       PAGE LAYOUT
+       ══════════════════════════════════════════════════════════════ */
+    .page-shell {
+      padding: 24px 20px 48px;
+      max-width: 1360px;
+      margin: 0 auto;
+    }
+
+    /* Page section title */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--pink-dim), transparent);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       GENERIC CARD
+       ══════════════════════════════════════════════════════════════ */
+    .dash-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 20px;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .dash-card:hover { border-color: var(--border-accent); }
+
+    /* Subtle top-edge pink glow on cards */
+    .dash-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20px; right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--pink-dim), transparent);
+    }
+
+    .card-header-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .card-header-label i {
+      color: var(--pink);
+      font-size: 13px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       KPI METRIC TILES  (top row)
+       ══════════════════════════════════════════════════════════════ */
+    .kpi-tile {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .kpi-tile:hover { border-color: var(--pink-dim); transform: translateY(-2px); }
+    .kpi-tile::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--pink-glow-lg), transparent 60%);
+      pointer-events: none;
+    }
+    .kpi-icon {
+      width: 38px; height: 38px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      margin-bottom: 12px;
+    }
+    .kpi-icon.pink   { background: var(--pink-glow);           color: var(--pink-bright); }
+    .kpi-icon.cyan   { background: rgba(0,200,215,0.12);       color: var(--cyan); }
+    .kpi-icon.amber  { background: rgba(245,158,11,0.12);      color: var(--amber); }
+    .kpi-icon.green  { background: rgba(34,197,94,0.12);       color: var(--green); }
+    .kpi-icon.violet { background: rgba(124,58,237,0.12);      color: var(--violet); }
+
+    .kpi-value {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .kpi-unit { font-size: 14px; color: var(--text-mono); margin-left: 2px; }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      color: var(--text-mono);
+    }
+    .kpi-trend {
+      position: absolute;
+      top: 18px; right: 18px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+    }
+    .kpi-trend.ok     { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .kpi-trend.warn   { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .kpi-trend.active { background: rgba(0,200,215,0.12);  color: var(--cyan);  }
+
+    /* ══════════════════════════════════════════════════════════════
+       CAMERA FEED PANEL
+       ══════════════════════════════════════════════════════════════ */
+    .camera-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #07090f;
+      border-radius: var(--r-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    /* Simulated camera feed — animated scanlines + noise for demo */
+    .camera-frame canvas {
+      width: 100%; height: 100%;
+      display: block;
+    }
+    .cam-overlay-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        linear-gradient(rgba(0,200,215,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,215,0.03) 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    .cam-badge-live {
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(239,68,68,0.9);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 1px;
+      padding: 3px 9px; border-radius: 4px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .cam-badge-live::before {
+      content: ''; width: 5px; height: 5px;
+      border-radius: 50%; background: #fff;
+      animation: blink 1.1s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .cam-badge-ip {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.55);
+      color: var(--text-mono);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 9px; border-radius: 4px;
+    }
+    /* Corner targeting brackets */
+    .cam-corner { position: absolute; width: 16px; height: 16px; }
+    .cam-corner.tl { top: 6px;  left: 6px;  border-top: 2px solid var(--pink); border-left: 2px solid var(--pink); }
+    .cam-corner.tr { top: 6px;  right: 6px; border-top: 2px solid var(--pink); border-right: 2px solid var(--pink); }
+    .cam-corner.bl { bottom: 6px; left: 6px;  border-bottom: 2px solid var(--pink); border-left: 2px solid var(--pink); }
+    .cam-corner.br { bottom: 6px; right: 6px; border-bottom: 2px solid var(--pink); border-right: 2px solid var(--pink); }
+
+    /* Crosshair */
+    .cam-crosshair {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px; height: 30px;
+      pointer-events: none;
+    }
+    .cam-crosshair::before, .cam-crosshair::after {
+      content: ''; position: absolute;
+      background: rgba(212,0,110,0.5);
+    }
+    .cam-crosshair::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+    .cam-crosshair::after  { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+
+    /* Camera telemetry strip below feed */
+    .cam-telemetry {
+      display: flex; gap: 8px; margin-top: 10px;
+    }
+    .cam-telem-chip {
+      flex: 1;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .cam-telem-chip span { display: block; color: var(--cyan); font-weight: 600; font-size: 12px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       CONTROL BUTTONS
+       ══════════════════════════════════════════════════════════════ */
+    .ctrl-btn {
+      border: none; border-radius: var(--r-md);
+      font-family: var(--font-body);
+      font-size: 14px; font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      padding: 14px 10px;
+      width: 100%;
+      position: relative; overflow: hidden;
+    }
+    .ctrl-btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .ctrl-btn:active { transform: scale(0.95); }
+
+    .ctrl-advance {
+      background: var(--cyan);
+      color: #050810;
+      box-shadow: 0 4px 20px rgba(0,200,215,0.3);
+    }
+    .ctrl-advance:hover { filter: brightness(1.12); box-shadow: 0 4px 28px rgba(0,200,215,0.5); }
+
+    .ctrl-retract {
+      background: var(--amber);
+      color: #050810;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+    }
+    .ctrl-retract:hover { filter: brightness(1.12); box-shadow: 0 4px 28px rgba(245,158,11,0.5); }
+
+    .ctrl-stop {
+      background: var(--red);
+      color: #fff;
+      font-size: 15px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(239,68,68,0.35);
+    }
+    .ctrl-stop:hover { filter: brightness(1.1); box-shadow: 0 4px 30px rgba(239,68,68,0.55); }
+
+    .ctrl-home {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    .ctrl-home:hover { border-color: var(--pink-dim); color: var(--pink-bright); }
+
+    /* ══════════════════════════════════════════════════════════════
+       SPEED SLIDER
+       ══════════════════════════════════════════════════════════════ */
+    .speed-track {
+      position: relative; margin: 6px 0 4px;
+    }
+    input[type=range].speed-range {
+      -webkit-appearance: none;
+      width: 100%; height: 5px;
+      border-radius: 3px;
+      background: var(--bg-elevated);
+      outline: none;
+      border: 1px solid var(--border);
+    }
+    input[type=range].speed-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--pink);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--pink-glow), 0 0 20px var(--pink-glow);
+      border: 2px solid rgba(255,255,255,0.2);
+      transition: box-shadow var(--transition);
+    }
+    input[type=range].speed-range::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 16px var(--pink-glow), 0 0 32px var(--pink-glow);
+    }
+    .speed-markers {
+      display: flex; justify-content: space-between;
+      font-family: var(--font-mono); font-size: 9px;
+      color: var(--text-mono); margin-top: 4px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       SENSOR INDICATORS
+       ══════════════════════════════════════════════════════════════ */
+    .sensor-row { display: flex; gap: 8px; }
+    .sensor-pill {
+      flex: 1;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 11px; font-weight: 500;
+      color: var(--text-secondary);
+      transition: border-color var(--transition);
+    }
+    .sensor-pill.active-home  { border-color: var(--green); }
+    .sensor-pill.active-limit { border-color: var(--red); }
+
+    .sensor-led {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--text-muted);
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .sensor-led.on-home  { background: var(--green);  box-shadow: 0 0 8px var(--green); }
+    .sensor-led.on-limit { background: var(--red);    box-shadow: 0 0 8px var(--red); }
+
+    /* ══════════════════════════════════════════════════════════════
+       POSITION PROGRESS BAR
+       ══════════════════════════════════════════════════════════════ */
+    .tube-track {
+      position: relative;
+      height: 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .tube-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--pink), var(--pink-bright));
+      border-radius: 8px;
+      transition: width 0.4s ease;
+      position: relative;
+    }
+    .tube-fill::after {
+      content: '';
+      position: absolute; right: 0; top: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25));
+    }
+    .tube-labels {
+      display: flex; justify-content: space-between;
+      font-family: var(--font-mono); font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       POSITION GRAPH (mini waveform)
+       ══════════════════════════════════════════════════════════════ */
+    .graph-wrap {
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 12px;
+      margin-top: 8px;
+    }
+    .graph-wrap canvas { display: block; width: 100%; }
+
+    /* ══════════════════════════════════════════════════════════════
+       MOTOR STATE BADGE
+       ══════════════════════════════════════════════════════════════ */
+    .motor-state-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid;
+      letter-spacing: 1px;
+    }
+    .motor-state-badge.stopped   { color: var(--green);  background: rgba(34,197,94,0.08);  border-color: rgba(34,197,94,0.2); }
+    .motor-state-badge.advancing { color: var(--cyan);   background: rgba(0,200,215,0.08);  border-color: rgba(0,200,215,0.2); }
+    .motor-state-badge.retracting{ color: var(--amber);  background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); }
+    .motor-state-badge.limit     { color: var(--red);    background: rgba(239,68,68,0.08);  border-color: rgba(239,68,68,0.2); }
+
+    /* Spinning indicator for moving states */
+    .motor-spinner {
+      width: 8px; height: 8px; border-radius: 50%;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .motor-spinner.paused { animation: none; }
+
+    /* ══════════════════════════════════════════════════════════════
+       LED INDICATOR STRIP
+       ══════════════════════════════════════════════════════════════ */
+    .led-strip {
+      display: flex; gap: 10px; align-items: center;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .led-indicator {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 5px;
+      flex: 1;
+    }
+    .led-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      transition: all var(--transition);
+    }
+    .led-dot.on-green  { background: var(--green);  box-shadow: 0 0 10px var(--green),  0 0 20px rgba(34,197,94,0.3); }
+    .led-dot.on-yellow { background: var(--amber);  box-shadow: 0 0 10px var(--amber),  0 0 20px rgba(245,158,11,0.3); }
+    .led-dot.on-red    { background: var(--red);    box-shadow: 0 0 10px var(--red),    0 0 20px rgba(239,68,68,0.3); }
+    .led-dot.on-blue   { background: var(--cyan);   box-shadow: 0 0 10px var(--cyan),   0 0 20px rgba(0,200,215,0.3); }
+    .led-label {
+      font-size: 9px; font-weight: 600;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       COMMAND LOG TABLE
+       ══════════════════════════════════════════════════════════════ */
+    .log-container {
+      max-height: 240px;
+      overflow-y: auto;
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+    }
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--text-primary);
+      font-size: 11px;
+    }
+    .log-table th {
+      position: sticky; top: 0;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-table td {
+      padding: 7px 12px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(30,45,71,0.4);
+    }
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:hover td { background: rgba(212,0,110,0.04); }
+
+    .log-table td.col-time   { color: var(--text-muted); font-size: 10px; }
+    .log-table td.col-cmd    { color: var(--pink-bright); font-weight: 600; }
+    .log-table td.col-status { }
+    .log-table td.col-pos    { color: var(--text-mono); }
+
+    .log-badge {
+      display: inline-block;
+      font-size: 9px; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px;
+      letter-spacing: 0.8px;
+    }
+    .log-badge.ok   { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .log-badge.err  { background: rgba(239,68,68,0.12);  color: var(--red); }
+    .log-badge.warn { background: rgba(245,158,11,0.12); color: var(--amber); }
+
+    /* ══════════════════════════════════════════════════════════════
+       SYSTEM INFO / ABOUT PANEL
+       ══════════════════════════════════════════════════════════════ */
+    .info-kv {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .info-row-kv {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 12px;
+    }
+    .info-key {
+      font-size: 11px; color: var(--text-muted);
+      font-weight: 500; letter-spacing: 0.5px;
+    }
+    .info-val {
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--text-mono);
+      font-weight: 600;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       BATTERY GAUGE
+       ══════════════════════════════════════════════════════════════ */
+    .battery-wrap {
+      display: flex; align-items: center; gap: 3px;
+    }
+    .battery-body {
+      flex: 1; height: 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .battery-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), #4ade80);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+    .battery-nub {
+      width: 4px; height: 7px;
+      background: var(--border);
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       SESSION TIMER
+       ══════════════════════════════════════════════════════════════ */
+    .session-timer {
+      font-family: var(--font-mono);
+      font-size: 32px; font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 3px;
+      text-align: center;
+      padding: 12px 0;
+    }
+    .session-timer .timer-sep { color: var(--pink); }
+
+    /* ══════════════════════════════════════════════════════════════
+       SETTINGS TAB CONTENT
+       ══════════════════════════════════════════════════════════════ */
+    .setting-group { margin-bottom: 20px; }
+    .setting-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 8px;
+    }
+    .setting-input {
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 10px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .setting-input:focus { border-color: var(--pink); }
+
+    .toggle-switch {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 10px 14px;
+    }
+    .toggle-switch label { font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+    .toggle-track {
+      position: relative; width: 36px; height: 20px;
+      background: var(--bg-elevated); border-radius: 10px;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: background var(--transition);
+    }
+    .toggle-track.on { background: var(--pink); border-color: var(--pink); }
+    .toggle-knob {
+      position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      background: #fff; border-radius: 50%;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle-track.on .toggle-knob { transform: translateX(16px); }
+
+    /* ══════════════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════════════ */
+    .dash-footer {
+      border-top: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .dash-footer a { color: var(--pink); text-decoration: none; }
+    .dash-footer a:hover { color: var(--pink-bright); }
+
+    /* ══════════════════════════════════════════════════════════════
+       TAB CONTENT VISIBILITY
+       ══════════════════════════════════════════════════════════════ */
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ══════════════════════════════════════════════════════════════
+       ANIMATIONS — staggered page load
+       ══════════════════════════════════════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-1 { animation: fadeUp 0.4s ease both; }
+    .anim-2 { animation: fadeUp 0.4s ease 0.08s both; }
+    .anim-3 { animation: fadeUp 0.4s ease 0.16s both; }
+    .anim-4 { animation: fadeUp 0.4s ease 0.24s both; }
+    .anim-5 { animation: fadeUp 0.4s ease 0.32s both; }
+
+    /* ══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .nav-center { display: none; }
+      .page-shell { padding: 16px 12px 32px; }
+      .kpi-value { font-size: 22px; }
+    }
+  </style>
+</head>
+
+<body>
+
+
+<!-- ── Top navigation ─────────────────────────────────────────── -->
+<nav class="top-nav">
+  <div class="nav-brand">
+    <div class="nav-logo">🩺</div>
+    <div>
+      <div class="nav-brand-text">EnteroclysisTube</div>
+      <div class="nav-brand-sub">Control System</div>
+    </div>
+  </div>
+
+  <div class="nav-center">
+    <a class="nav-tab active" onclick="switchTab('control',this)">
+      <i class="bi bi-joystick me-1"></i>Control
+    </a>
+    <a class="nav-tab" onclick="switchTab('monitor',this)">
+      <i class="bi bi-activity me-1"></i>Monitor
+    </a>
+    <a class="nav-tab" onclick="switchTab('log',this)">
+      <i class="bi bi-list-ul me-1"></i>Log
+    </a>
+    <a class="nav-tab" onclick="switchTab('settings',this)">
+      <i class="bi bi-gear me-1"></i>Settings
+    </a>
+  </div>
+
+  <div class="nav-right">
+    <div class="conn-pill">
+      <div class="conn-dot" id="conn-dot"></div>
+      <span id="conn-label">192.168.4.1</span>
+    </div>
+    <div class="conn-pill">
+      <i class="bi bi-battery-half" style="color:var(--green)"></i>
+      <span id="nav-battery">100%</span>
+    </div>
+    <div class="conn-pill" style="color:var(--pink-bright); font-weight:600;">
+      <i class="bi bi-clock"></i>
+      <span id="nav-uptime">00:00:00</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE SHELL
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="page-shell">
+
+  <!-- ═══ TAB: CONTROL ════════════════════════════════════════════ -->
+  <div class="tab-pane active" id="tab-control">
+
+    <!-- KPI tiles row -->
+    <div class="section-label mb-2">Live Metrics</div>
+    <div class="row g-3 mb-4 anim-1">
+      <div class="col-6 col-md-3">
+        <div class="kpi-tile">
+          <div class="kpi-trend ok" id="kpi-motor-badge">STOPPED</div>
+          <div class="kpi-icon pink"><i class="bi bi-arrow-right-circle-fill"></i></div>
+          <div class="kpi-value" id="kpi-position">0.0<span class="kpi-unit">cm</span></div>
+          <div class="kpi-label">Tube Position</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-tile">
+          <div class="kpi-trend active" id="kpi-speed-badge">PWM</div>
+          <div class="kpi-icon cyan"><i class="bi bi-speedometer2"></i></div>
+          <div class="kpi-value" id="kpi-speed">50<span class="kpi-unit">%</span></div>
+          <div class="kpi-label">Motor Speed</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-tile">
+          <div class="kpi-trend ok">NORMAL</div>
+          <div class="kpi-icon green"><i class="bi bi-battery-full"></i></div>
+          <div class="kpi-value" id="kpi-battery">100<span class="kpi-unit">%</span></div>
+          <div class="kpi-label">Battery Level</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-tile">
+          <div class="kpi-trend ok">ONLINE</div>
+          <div class="kpi-icon violet"><i class="bi bi-wifi"></i></div>
+          <div class="kpi-value" id="kpi-uptime">0<span class="kpi-unit">s</span></div>
+          <div class="kpi-label">System Uptime</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main control row -->
+    <div class="row g-3 anim-2">
+
+      <!-- Camera feed -->
+      <div class="col-lg-5 anim-3">
+        <div class="dash-card">
+          <div class="card-header-label">
+            <i class="bi bi-camera-video-fill"></i>Live Camera Feed
+            <span class="ms-auto" style="font-size:10px; color:var(--cyan); font-family:var(--font-mono)">ESP32-CAM · 192.168.4.2</span>
+          </div>
+
+          <div class="camera-frame">
+            <!-- Simulated live camera canvas -->
+            <canvas id="cam-canvas"></canvas>
+            <div class="cam-overlay-grid"></div>
+            <div class="cam-badge-live">● REC</div>
+            <div class="cam-badge-ip">192.168.4.2:80</div>
+            <div class="cam-corner tl"></div>
+            <div class="cam-corner tr"></div>
+            <div class="cam-corner bl"></div>
+            <div class="cam-corner br"></div>
+            <div class="cam-crosshair"></div>
+          </div>
+
+          <div class="cam-telemetry">
+            <div class="cam-telem-chip">FORMAT<span>MJPEG</span></div>
+            <div class="cam-telem-chip">RES<span>640×480</span></div>
+            <div class="cam-telem-chip">FPS<span id="cam-fps">30</span></div>
+            <div class="cam-telem-chip">QUALITY<span>Q12</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls column -->
+      <div class="col-lg-4 anim-4">
+        <div class="dash-card">
+          <div class="card-header-label">
+            <i class="bi bi-joystick"></i>Tube Control
+          </div>
+
+          <!-- Motor state badge -->
+          <div class="mb-3">
+            <div class="motor-state-badge stopped" id="motor-badge">
+              <div class="motor-spinner paused" id="motor-spinner"></div>
+              <span id="motor-label">STOPPED</span>
+            </div>
+          </div>
+
+          <!-- Tube position progress bar -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span style="font-size:11px; color:var(--text-muted); font-weight:600; letter-spacing:0.8px; text-transform:uppercase;">Insertion Depth</span>
+              <span style="font-family:var(--font-mono); font-size:12px; color:var(--pink-bright);" id="depth-label">0.0 / 100.0 cm</span>
+            </div>
+            <div class="tube-track">
+              <div class="tube-fill" id="tube-fill" style="width:0%"></div>
+            </div>
+            <div class="tube-labels">
+              <span>HOME</span><span>25cm</span><span>50cm</span><span>75cm</span><span>LIMIT</span>
+            </div>
+          </div>
+
+          <!-- Speed slider -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-baseline mb-1">
+              <span style="font-size:11px; color:var(--text-muted); font-weight:600; letter-spacing:0.8px; text-transform:uppercase;">Motor Speed</span>
+              <span style="font-family:var(--font-mono); font-size:20px; font-weight:600; color:var(--pink-bright);" id="speed-label-ctrl">50%</span>
+            </div>
+            <div class="speed-track">
+              <input type="range" class="speed-range" id="speed-slider" min="0" max="100" value="50" oninput="onSpeedChange(this.value)"/>
+            </div>
+            <div class="speed-markers">
+              <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+            </div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <button class="ctrl-btn ctrl-advance"
+                      onmousedown="startCmd('advance')"
+                      onmouseup="startCmd('stop')"
+                      ontouchstart="startCmd('advance')"
+                      ontouchend="startCmd('stop')">
+                <i class="bi bi-arrow-right-circle-fill"></i> ADVANCE
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="ctrl-btn ctrl-retract"
+                      onmousedown="startCmd('retract')"
+                      onmouseup="startCmd('stop')"
+                      ontouchstart="startCmd('retract')"
+                      ontouchend="startCmd('stop')">
+                <i class="bi bi-arrow-left-circle-fill"></i> RETRACT
+              </button>
+            </div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6">
+              <button class="ctrl-btn ctrl-home" onclick="startCmd('home')">
+                <i class="bi bi-house-fill"></i> HOME
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="ctrl-btn ctrl-stop" onclick="startCmd('stop')">
+                <i class="bi bi-stop-fill"></i> STOP
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status column -->
+      <div class="col-lg-3 anim-5">
+        <div class="dash-card">
+          <div class="card-header-label">
+            <i class="bi bi-activity"></i>System Status
+          </div>
+
+          <!-- LED strip -->
+          <div class="mb-3">
+            <div class="setting-label">Indicator LEDs</div>
+            <div class="led-strip">
+              <div class="led-indicator">
+                <div class="led-dot on-green" id="led-green"></div>
+                <div class="led-label">Ready</div>
+              </div>
+              <div class="led-indicator">
+                <div class="led-dot" id="led-yellow"></div>
+                <div class="led-label">Motor</div>
+              </div>
+              <div class="led-indicator">
+                <div class="led-dot" id="led-red"></div>
+                <div class="led-label">Limit</div>
+              </div>
+              <div class="led-indicator">
+                <div class="led-dot on-blue" id="led-blue"></div>
+                <div class="led-label">WiFi</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sensor pills -->
+          <div class="mb-3">
+            <div class="setting-label">IR Sensors</div>
+            <div class="sensor-row">
+              <div class="sensor-pill" id="pill-home">
+                <div class="sensor-led" id="led-home"></div>
+                <span>Home</span>
+              </div>
+              <div class="sensor-pill" id="pill-limit">
+                <div class="sensor-led" id="led-limit"></div>
+                <span>Limit</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Battery gauge -->
+          <div class="mb-3">
+            <div class="setting-label">Battery</div>
+            <div class="d-flex align-items-center gap-2">
+              <div class="battery-wrap flex-grow-1">
+                <div class="battery-body flex-grow-1">
+                  <div class="battery-fill" id="battery-fill" style="width:100%"></div>
+                </div>
+                <div class="battery-nub"></div>
+              </div>
+              <span style="font-family:var(--font-mono); font-size:12px; color:var(--green);" id="battery-label">100%</span>
+            </div>
+          </div>
+
+          <!-- Session timer -->
+          <div class="mb-0">
+            <div class="setting-label">Session Duration</div>
+            <div class="session-timer">
+              <span id="timer-h">00</span><span class="timer-sep">:</span><span id="timer-m">00</span><span class="timer-sep">:</span><span id="timer-s">00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end row -->
+  </div><!-- end tab-control -->
+
+  <!-- ═══ TAB: MONITOR ════════════════════════════════════════════ -->
+  <div class="tab-pane" id="tab-monitor">
+    <div class="section-label mb-3">Real-time Monitoring</div>
+    <div class="row g-3">
+      <div class="col-md-8">
+        <div class="dash-card">
+          <div class="card-header-label"><i class="bi bi-graph-up"></i>Position Over Time</div>
+          <div class="graph-wrap">
+            <canvas id="graph-position" height="100"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dash-card">
+          <div class="card-header-label"><i class="bi bi-info-circle"></i>System Info</div>
+          <div class="info-kv">
+            <div class="info-row-kv"><span class="info-key">MCU</span><span class="info-val">ESP32 Dev Board</span></div>
+            <div class="info-row-kv"><span class="info-key">AP SSID</span><span class="info-val">EnteroclysisTube_AP</span></div>
+            <div class="info-row-kv"><span class="info-key">IP Address</span><span class="info-val">192.168.4.1</span></div>
+            <div class="info-row-kv"><span class="info-key">CAM IP</span><span class="info-val">192.168.4.2</span></div>
+            <div class="info-row-kv"><span class="info-key">PWM Freq</span><span class="info-val">5000 Hz</span></div>
+            <div class="info-row-kv"><span class="info-key">Pulses/cm</span><span class="info-val">20</span></div>
+            <div class="info-row-kv"><span class="info-key">Poll Rate</span><span class="info-val">500 ms</span></div>
+            <div class="info-row-kv"><span class="info-key">LCD Addr</span><span class="info-val">0x27</span></div>
+            <div class="info-row-kv"><span class="info-key">Max Depth</span><span class="info-val">100.0 cm</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Speed over time graph -->
+      <div class="col-md-12">
+        <div class="dash-card">
+          <div class="card-header-label"><i class="bi bi-lightning-charge"></i>Motor Speed Over Time</div>
+          <div class="graph-wrap">
+            <canvas id="graph-speed" height="70"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: LOG ═══════════════════════════════════════════════ -->
+  <div class="tab-pane" id="tab-log">
+    <div class="section-label mb-3">Command & Event Log</div>
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="dash-card">
+          <div class="card-header-label">
+            <i class="bi bi-terminal"></i>Full Session Log
+            <button class="btn btn-sm ms-auto"
+              style="background:rgba(212,0,110,0.1); border:1px solid var(--pink-dim); color:var(--pink-bright); font-size:10px; padding:3px 10px; border-radius:5px;"
+              onclick="clearLog()">
+              <i class="bi bi-trash"></i> Clear
+            </button>
+          </div>
+          <div class="log-container">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Command</th>
+                  <th>Status</th>
+                  <th>Position</th>
+                  <th>Speed</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="log-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: SETTINGS ══════════════════════════════════════════ -->
+  <div class="tab-pane" id="tab-settings">
+    <div class="section-label mb-3">System Configuration</div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="dash-card">
+          <div class="card-header-label"><i class="bi bi-wifi"></i>Network Settings</div>
+          <div class="setting-group">
+            <div class="setting-label">ESP32 IP Address</div>
+            <input type="text" class="setting-input" value="192.168.4.1" id="cfg-ip"/>
+          </div>
+          <div class="setting-group">
+            <div class="setting-label">ESP32-CAM Stream URL</div>
+            <input type="text" class="setting-input" value="http://192.168.4.2/stream" id="cfg-cam"/>
+          </div>
+          <div class="setting-group">
+            <div class="setting-label">Status Poll Interval (ms)</div>
+            <input type="number" class="setting-input" value="500" min="100" max="5000" id="cfg-poll"/>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="dash-card">
+          <div class="card-header-label"><i class="bi bi-sliders"></i>Motion Parameters</div>
+          <div class="setting-group">
+            <div class="setting-label">Default Speed (%)</div>
+            <input type="number" class="setting-input" value="50" min="0" max="100" id="cfg-speed"/>
+          </div>
+          <div class="setting-group">
+            <div class="setting-label">Max Insertion Depth (cm)</div>
+            <input type="number" class="setting-input" value="100" min="10" max="200" id="cfg-depth"/>
+          </div>
+          <div class="setting-group">
+            <div class="setting-label">Pulses per cm (encoder)</div>
+            <input type="number" class="setting-input" value="20" min="1" max="200" id="cfg-ppc"/>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="dash-card">
+          <div class="card-header-label"><i class="bi bi-toggles"></i>Feature Toggles</div>
+          <div class="d-flex flex-column gap-2">
+            <div class="toggle-switch">
+              <label>Buzzer on limit reached</label>
+              <div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-switch">
+              <label>Auto-stop at home sensor</label>
+              <div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-switch">
+              <label>Hold-to-move buttons</label>
+              <div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-switch">
+              <label>LCD auto-update</label>
+              <div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-switch">
+              <label>Camera overlay grid</label>
+              <div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="dash-card">
+          <div class="card-header-label"><i class="bi bi-info-circle"></i>About This Project</div>
+          <div class="info-kv">
+            <div class="info-row-kv"><span class="info-key">Project</span><span class="info-val">Remote Enteroclysis Tube</span></div>
+            <div class="info-row-kv"><span class="info-key">Date</span><span class="info-val">2026</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- end page-shell -->
+
+
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   DASHBOARD JAVASCRIPT
+   All data is simulated for the standalone GitHub demo.
+   Replace sendCmd / pollStatus with real fetch() calls when
+   this dashboard is embedded in the ESP32 via dashboard.h
+   ═══════════════════════════════════════════════════════════════════ */
+
+// ── State ────────────────────────────────────────────────────────
+const state = {
+  motor:        'stopped',   // 'stopped' | 'advancing' | 'retracting'
+  position:     0.0,         // cm
+  speed:        50,          // 0–100%
+  battery:      100,         // %
+  uptime:       0,           // seconds
+  sensorHome:   true,        // tube at home position on boot
+  sensorLimit:  false,
+  limitReached: false,
+  sessionStart: Date.now(),
+};
+
+// Position history for graph (last 60 samples)
+const posHistory   = new Array(60).fill(0);
+const speedHistory = new Array(60).fill(50);
+
+// Log entries
+const logEntries = [];
+const MAX_LOG = 100;
+
+// ── Tab switching ────────────────────────────────────────────────
+function switchTab(id, el) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  el.classList.add('active');
+  // Redraw graphs on monitor tab open
+  if (id === 'monitor') { drawGraph(); }
+}
+
+// ── Simulated command handler ────────────────────────────────────
+function startCmd(action) {
+  const prevState = state.motor;
+
+  switch (action) {
+    case 'advance':
+      if (state.sensorLimit) {
+        addLog('ADVANCE', 'WARN', 'Limit sensor — cannot advance');
+        return;
+      }
+      state.motor = 'advancing';
+      state.sensorHome = false;
+      break;
+    case 'retract':
+      if (state.sensorHome) {
+        addLog('RETRACT', 'WARN', 'Home sensor — already at home');
+        return;
+      }
+      state.motor = 'retracting';
+      state.sensorLimit = false;
+      break;
+    case 'stop':
+      state.motor = 'stopped';
+      break;
+    case 'home':
+      state.motor = 'retracting';
+      state.sensorLimit = false;
+      break;
+  }
+
+  addLog(action.toUpperCase(), 'OK', `Speed: ${state.speed}%, Pos: ${state.position.toFixed(1)}cm`);
+  updateUI();
+}
+
+// ── Speed change ─────────────────────────────────────────────────
+function onSpeedChange(val) {
+  state.speed = parseInt(val);
+  document.getElementById('speed-label-ctrl').textContent = val + '%';
+  document.getElementById('kpi-speed').innerHTML = val + '<span class="kpi-unit">%</span>';
+}
+
+// ── Toggle switches (settings) ───────────────────────────────────
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+}
+
+// ── Simulation tick — runs every 300ms ───────────────────────────
+// Moves the tube position, simulates battery drain, etc.
+setInterval(() => {
+  state.uptime++;
+
+  // Move position based on motor state
+  if (state.motor === 'advancing') {
+    const step = (state.speed / 100) * 0.8;
+    state.position = Math.min(100, state.position + step);
+    if (state.position >= 100) {
+      state.position = 100;
+      state.sensorLimit = true;
+      state.motor = 'stopped';
+      addLog('AUTO-STOP', 'WARN', 'Limit sensor triggered');
+    }
+  } else if (state.motor === 'retracting') {
+    const step = (state.speed / 100) * 0.8;
+    state.position = Math.max(0, state.position - step);
+    if (state.position <= 0) {
+      state.position = 0;
+      state.sensorHome = true;
+      state.motor = 'stopped';
+      addLog('AUTO-STOP', 'OK', 'Home sensor — tube retracted');
+    }
+  }
+
+  // Slowly drain battery (simulation only)
+  if (state.motor !== 'stopped') {
+    state.battery = Math.max(0, state.battery - 0.005);
+  }
+
+  // Push to history arrays
+  posHistory.push(parseFloat(state.position.toFixed(1)));
+  posHistory.shift();
+  speedHistory.push(state.motor !== 'stopped' ? state.speed : 0);
+  speedHistory.shift();
+
+  updateUI();
+  drawGraph();
+}, 300);
+
+// Session timer (counts up every second)
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - state.sessionStart) / 1000);
+  const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+  const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+  const s = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('timer-h').textContent = h;
+  document.getElementById('timer-m').textContent = m;
+  document.getElementById('timer-s').textContent = s;
+  document.getElementById('nav-uptime').textContent = `${h}:${m}:${s}`;
+}, 1000);
+
+// ── Update all UI elements from state ───────────────────────────
+function updateUI() {
+  const pos = state.position;
+  const pct = (pos / 100) * 100;
+
+  // KPI tiles
+  document.getElementById('kpi-position').innerHTML = pos.toFixed(1) + '<span class="kpi-unit">cm</span>';
+  document.getElementById('kpi-speed').innerHTML = state.speed + '<span class="kpi-unit">%</span>';
+  document.getElementById('kpi-battery').innerHTML = Math.round(state.battery) + '<span class="kpi-unit">%</span>';
+  document.getElementById('kpi-uptime').innerHTML = state.uptime + '<span class="kpi-unit">s</span>';
+  document.getElementById('nav-battery').textContent = Math.round(state.battery) + '%';
+
+  // Motor badge on KPI tile
+  const motorBadge = document.getElementById('kpi-motor-badge');
+  const motorMap = { stopped:'STOPPED', advancing:'ADVANCING', retracting:'RETRACTING' };
+  motorBadge.textContent = motorMap[state.motor] || state.motor.toUpperCase();
+  motorBadge.className = 'kpi-trend ' + (state.motor === 'stopped' ? 'ok' : 'active');
+
+  // Tube depth bar
+  document.getElementById('tube-fill').style.width = pct + '%';
+  document.getElementById('depth-label').textContent = pos.toFixed(1) + ' / 100.0 cm';
+
+  // Motor state badge
+  const badge  = document.getElementById('motor-badge');
+  const label  = document.getElementById('motor-label');
+  const spinner = document.getElementById('motor-spinner');
+  badge.className = 'motor-state-badge ' + state.motor;
+  label.textContent = state.motor.toUpperCase();
+  spinner.className = 'motor-spinner' + (state.motor === 'stopped' ? ' paused' : '');
+
+  // LED strip
+  document.getElementById('led-yellow').className = 'led-dot' + (state.motor !== 'stopped' ? ' on-yellow' : '');
+  document.getElementById('led-red').className    = 'led-dot' + (state.sensorLimit ? ' on-red' : '');
+
+  // Sensor pills
+  const homeActive  = state.sensorHome;
+  const limitActive = state.sensorLimit;
+  document.getElementById('led-home').className  = 'sensor-led' + (homeActive  ? ' on-home'  : '');
+  document.getElementById('led-limit').className = 'sensor-led' + (limitActive ? ' on-limit' : '');
+  document.getElementById('pill-home').className  = 'sensor-pill' + (homeActive  ? ' active-home'  : '');
+  document.getElementById('pill-limit').className = 'sensor-pill' + (limitActive ? ' active-limit' : '');
+
+  // Battery gauge
+  document.getElementById('battery-fill').style.width = state.battery + '%';
+  document.getElementById('battery-label').textContent = Math.round(state.battery) + '%';
+  document.getElementById('battery-fill').style.background =
+    state.battery > 50 ? 'linear-gradient(90deg, var(--green), #4ade80)' :
+    state.battery > 20 ? 'linear-gradient(90deg, var(--amber), #fcd34d)' :
+                         'linear-gradient(90deg, var(--red), #f87171)';
+}
+
+// ── Command log ──────────────────────────────────────────────────
+function addLog(cmd, status, detail) {
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-GB', { hour12: false });
+
+  logEntries.unshift({ time, cmd, status, pos: state.position.toFixed(1), speed: state.speed, detail });
+  if (logEntries.length > MAX_LOG) logEntries.pop();
+
+  renderLog();
+}
+
+function renderLog() {
+  const tbody = document.getElementById('log-body');
+  tbody.innerHTML = logEntries.map(e => `
+    <tr>
+      <td class="col-time">${e.time}</td>
+      <td class="col-cmd">${e.cmd}</td>
+      <td class="col-status"><span class="log-badge ${e.status.toLowerCase()}">${e.status}</span></td>
+      <td class="col-pos">${e.pos} cm</td>
+      <td class="col-pos">${e.speed}%</td>
+      <td style="color:var(--text-muted); font-size:10px;">${e.detail}</td>
+    </tr>
+  `).join('');
+}
+
+function clearLog() {
+  logEntries.length = 0;
+  renderLog();
+}
+
+// ── Mini graphs ──────────────────────────────────────────────────
+function drawGraph() {
+  drawLineGraph('graph-position', posHistory, 0, 100, '#d4006e', 'rgba(212,0,110,0.12)');
+  drawLineGraph('graph-speed', speedHistory, 0, 100, '#00c8d7', 'rgba(0,200,215,0.1)');
+}
+
+function drawLineGraph(canvasId, data, min, max, strokeColor, fillColor) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 600;
+  const H = canvas.height;
+  canvas.width = W;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(30,45,71,0.6)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = (i / 4) * H;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  if (data.length < 2) return;
+
+  const range = max - min;
+  const xs = data.map((_, i) => (i / (data.length - 1)) * W);
+  const ys = data.map(v => H - ((v - min) / range) * H);
+
+  // Fill area
+  ctx.beginPath();
+  ctx.moveTo(xs[0], H);
+  xs.forEach((x, i) => ctx.lineTo(x, ys[i]));
+  ctx.lineTo(xs[xs.length - 1], H);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xs[0], ys[0]);
+  xs.forEach((x, i) => ctx.lineTo(x, ys[i]));
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Dot at latest value
+  const lx = xs[xs.length - 1];
+  const ly = ys[ys.length - 1];
+  ctx.beginPath();
+  ctx.arc(lx, ly, 4, 0, Math.PI * 2);
+  ctx.fillStyle = strokeColor;
+  ctx.fill();
+}
+
+// ── Simulated camera canvas (noise texture) ──────────────────────
+(function initCamera() {
+  const canvas = document.getElementById('cam-canvas');
+  if (!canvas) return;
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const ctx = canvas.getContext('2d');
+  let frame = 0;
+
+  // Draw a simulated fluoroscopy-style frame
+  function drawCameraFrame() {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Dark background with slight vignette
+    const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.7);
+    grad.addColorStop(0, '#0d1520');
+    grad.addColorStop(1, '#050810');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Animated tube path (sinusoidal — simulates the tube in a fluoroscopy view)
+    const tubeProgress = state.position / 100;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,200,215,0.7)';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = 'rgba(0,200,215,0.5)';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    const startX = W * 0.1, startY = H * 0.5;
+    ctx.moveTo(startX, startY);
+    for (let t = 0; t <= tubeProgress; t += 0.01) {
+      const x = startX + t * W * 0.8;
+      const y = startY + Math.sin(t * Math.PI * 3 + frame * 0.02) * H * 0.12 + t * H * 0.1;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Tube tip marker
+    const tipX = startX + tubeProgress * W * 0.8;
+    const tipY = startY + Math.sin(tubeProgress * Math.PI * 3 + frame * 0.02) * H * 0.12 + tubeProgress * H * 0.1;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(212,0,110,0.9)';
+    ctx.shadowColor = 'rgba(212,0,110,0.8)';
+    ctx.shadowBlur = 14;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Noise / grain overlay
+    const imgData = ctx.getImageData(0, 0, W, H);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const noise = (Math.random() - 0.5) * 14;
+      d[i]   = Math.max(0, Math.min(255, d[i]   + noise));
+      d[i+1] = Math.max(0, Math.min(255, d[i+1] + noise));
+      d[i+2] = Math.max(0, Math.min(255, d[i+2] + noise));
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // Scanline overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    for (let y = 0; y < H; y += 2) {
+      ctx.fillRect(0, y, W, 1);
+    }
+
+    frame++;
+    requestAnimationFrame(drawCameraFrame);
+  }
+
+  drawCameraFrame();
+})();
+
+// ── Boot log entries ─────────────────────────────────────────────
+addLog('SYSTEM BOOT',   'OK',   'All peripherals initialised');
+addLog('WIFI AP',       'OK',   'SSID: EnteroclysisTube_AP · 192.168.4.1');
+addLog('HTTP SERVER',   'OK',   'Web server started on port 80');
+addLog('CAM MODULE',    'OK',   'ESP32-CAM stream at 192.168.4.2:80');
+addLog('LCD DISPLAY',   'OK',   'I²C addr 0x27 — "System Ready"');
+addLog('DASHBOARD',     'OK',   'Client connected — demo mode active');
+
+// Initial UI render
+updateUI();
+</script>
+</body>
+</html>
